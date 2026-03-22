@@ -21,3 +21,6 @@ Thumbs.db
 
 # Database artifacts
 *.sqlite3
+
+# Large model file
+ml_models/best.pt
