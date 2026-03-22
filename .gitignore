@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# Django uploaded/generated files
+media/
+staticfiles/
+
+# Logs
+*.log
+
+# Editor / OS files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Database artifacts
+*.sqlite3

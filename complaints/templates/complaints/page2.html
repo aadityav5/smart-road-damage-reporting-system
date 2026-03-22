@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complaint Portal</title>
+  <style>
+    :root {
+      --bg: #f4f1ec;
+      --card-bg: #ffffff;
+      --text: #1a1a1a;
+      --border: #e0dcd6;
+      --report-accent: #5b4fcf;
+      --track-accent: #2a9d6e;
+      --glow-1: rgba(91, 79, 207, 0.08);
+      --glow-2: rgba(42, 157, 110, 0.06);
+      --card-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+      --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111111;
+        --card-bg: #1a1a1a;
+        --text: #e8e8e8;
+        --border: #2a2a2a;
+        --report-accent: #8b80f0;
+        --track-accent: #4dd9a4;
+        --glow-1: rgba(139, 128, 240, 0.06);
+        --glow-2: rgba(77, 217, 164, 0.04);
+        --card-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+        --card-shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, system-ui, sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* --- NEW LOGOUT BUTTON STYLES --- */
+    .logout-btn {
+      position: absolute;
+      top: 28px;
+      right: 32px;
+      padding: 10px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: var(--card-shadow);
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.15);
+      transform: translateY(-2px);
+    }
+    /* -------------------------------- */
+
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .bg-glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--glow-1);
+      top: -10%;
+      left: -5%;
+    }
+
+    .bg-glow-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--glow-2);
+      bottom: -10%;
+      right: -5%;
+    }
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      position: relative;
+      z-index: 1;
+      padding: 0 24px;
+    }
+
+    .welcome-text {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.4px;
+      margin-bottom: 12px;
+    }
+
+    .option-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 38px 72px;
+      cursor: pointer;
+      position: relative;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  box-shadow 0.35s ease,
+                  border-color 0.35s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      width: 340px;
+      text-align: center;
+    }
+
+    .option-card:active {
+      transform: scale(0.97);
+    }
+
+    .option-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .option-card.report:hover {
+      border-color: var(--report-accent);
+    }
+
+    .option-card.track:hover {
+      border-color: var(--track-accent);
+    }
+
+    .card-text {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      color: var(--text);
+    }
+
+    .card-line {
+      height: 2px;
+      width: 0;
+      margin: 10px auto 0;
+      border-radius: 2px;
+      transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .option-card.report .card-line {
+      background: var(--report-accent);
+    }
+
+    .option-card.track .card-line {
+      background: var(--track-accent);
+    }
+
+    .option-card:hover .card-line {
+      width: 60%;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+
+  <div class="page-wrapper">
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="main-content">
+      <h1 class="welcome-text">Welcome to Complaint Portal</h1>
+
+      <div class="option-card report" onclick="handleClick('report')">
+        <span class="card-text">Report Complaint</span>
+        <div class="card-line"></div>
+      </div>
+
+      <div class="option-card track" onclick="handleClick('track')">
+        <span class="card-text">Track Complaint</span>
+        <div class="card-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function handleClick(option) {
+    if (option === 'report') {
+      window.location.href = "{% url 'report' %}";
+    }
+    if (option === 'track') {
+      window.location.href = "{% url 'track_list' %}";
+    }
+  }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,853 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SMC Officer Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      min-height: 100vh;
+      background: #0a0f1e;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 32px;
+      background: rgba(10,15,30,0.95);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(72,187,120,0.2);
+    }
+    .navbar-brand { font-size: 16px; font-weight: 700; color: #fff; }
+    .navbar-brand span { color: #68d391; }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .officer-badge {
+      font-size: 11px; font-weight: 600;
+      background: rgba(72,187,120,0.15);
+      border: 1px solid rgba(72,187,120,0.3);
+      color: #68d391; padding: 5px 12px; border-radius: 20px;
+    }
+    .btn-logout {
+      font-size: 12px; padding: 6px 14px;
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+      background: transparent; color: rgba(255,255,255,0.5);
+      cursor: pointer; font-family: 'Sora', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: #ef4444; color: #ef4444; }
+
+    /* Layout */
+    .container { padding: 24px 32px; }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 16px 18px;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-label { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.06em; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; }
+    .stat-sub { font-size: 11px; margin-top: 4px; }
+    .c-yellow { color: #f6c90e; }
+    .c-red    { color: #fc8181; }
+    .c-green  { color: #68d391; }
+    .c-blue   { color: #63b3ed; }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex; gap: 12px; align-items: center;
+      flex-wrap: wrap; margin-bottom: 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 18px;
+    }
+    .filter-bar label { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.06em; }
+    .filter-bar select, .filter-bar input {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; padding: 7px 12px;
+      color: #fff; font-family: 'Sora', sans-serif;
+      font-size: 13px; outline: none;
+      appearance: none; -webkit-appearance: none;
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .filter-bar select:focus, .filter-bar input:focus { border-color: #68d391; }
+    .filter-bar select option { background: #0a0f1e; }
+    .filter-bar input { width: 180px; }
+    .btn-reset {
+      padding: 7px 14px; border-radius: 8px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.5);
+      font-family: 'Sora', sans-serif; font-size: 13px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-reset:hover { background: rgba(255,255,255,0.07); color: #fff; }
+
+    /* Section title */
+    .section-title {
+      font-size: 15px; font-weight: 600; color: #fff;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title span { color: rgba(255,255,255,0.35); font-size: 13px; font-weight: 400; }
+
+    /* Complaints Table */
+    .table-wrap {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; overflow: hidden;
+      margin-bottom: 24px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: rgba(255,255,255,0.06); }
+    th {
+      padding: 12px 16px; font-size: 11px;
+      font-weight: 600; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.4);
+      text-align: left; text-transform: uppercase;
+    }
+    td { padding: 13px 16px; font-size: 13px; color: rgba(255,255,255,0.85); border-top: 1px solid rgba(255,255,255,0.05); }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .badge-pending  { background: rgba(246,201,14,0.15); color: #f6c90e; border: 1px solid rgba(246,201,14,0.25); }
+    .badge-progress { background: rgba(99,179,237,0.15); color: #63b3ed; border: 1px solid rgba(99,179,237,0.25); }
+    .badge-done     { background: rgba(104,211,145,0.15); color: #68d391; border: 1px solid rgba(68,211,145,0.25); }
+    .badge-overdue  { background: rgba(252,129,129,0.15); color: #fc8181; border: 1px solid rgba(252,129,129,0.25); }
+
+    .priority-high   { color: #fc8181; font-weight: 600; }
+    .priority-medium { color: #f6c90e; font-weight: 600; }
+    .priority-low    { color: #68d391; font-weight: 600; }
+
+    .action-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .btn-view {
+      padding: 5px 12px; border-radius: 7px;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: 'Sora', sans-serif;
+      transition: all 0.2s;
+      background: rgba(99,179,237,0.15); color: #63b3ed;
+      border: 1px solid rgba(99,179,237,0.25);
+      text-decoration: none; display: inline-block;
+    }
+    .btn-view:hover { background: rgba(99,179,237,0.28); }
+
+    /* Inline update form inside table */
+    .inline-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .inline-select {
+      padding: 5px 8px; border-radius: 7px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; font-family: 'Sora', sans-serif;
+      font-size: 12px; outline: none; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .inline-select:focus { border-color: #68d391; }
+    .inline-select option { background: #0a0f1e; }
+    .inline-progress {
+      width: 60px; padding: 5px 8px; border-radius: 7px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; font-family: 'Sora', sans-serif;
+      font-size: 12px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .inline-progress:focus { border-color: #68d391; }
+    .btn-update {
+      padding: 5px 12px; border-radius: 7px;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: 'Sora', sans-serif;
+      transition: all 0.2s; border: none;
+      background: rgba(72,187,120,0.15); color: #68d391;
+      border: 1px solid rgba(72,187,120,0.25);
+    }
+    .btn-update:hover { background: rgba(72,187,120,0.28); }
+
+    /* Bottom Grid */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* Image Gallery */
+    .panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 18px;
+    }
+    .img-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .img-thumb {
+      aspect-ratio: 1; border-radius: 8px;
+      object-fit: cover; cursor: pointer;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center;
+      justify-content: center; font-size: 24px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .img-thumb:hover { transform: scale(1.04); border-color: #68d391; }
+
+    /* Completion Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 12px; }
+    .timeline-item { display: flex; gap: 12px; align-items: flex-start; }
+    .tl-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      margin-top: 4px; flex-shrink: 0;
+    }
+    .tl-dot.done     { background: #68d391; }
+    .tl-dot.progress { background: #63b3ed; }
+    .tl-dot.pending  { background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.2); }
+    .tl-dot.overdue  { background: #fc8181; }
+    .tl-title { font-size: 13px; color: #fff; font-weight: 600; }
+    .tl-meta  { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .tl-time  { font-size: 11px; margin-top: 3px; }
+
+    /* Progress bar */
+    .progress-wrap { margin-top: 12px; }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 6px; border-radius: 4px;
+      background: rgba(255,255,255,0.08); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #38a169, #68d391);
+      transition: width 1s ease;
+    }
+
+    /* Empty state */
+    .empty-row td {
+      text-align: center;
+      padding: 32px !important;
+      color: rgba(255,255,255,0.3);
+      font-size: 13px;
+    }
+
+    /* ── 10-Stage Lifecycle Tracker ── */
+    .lifecycle-wrap {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      margin-bottom: 32px;
+      align-items: start;
+    }
+
+    .lifecycle-legend {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 18px;
+      position: sticky;
+      top: 80px;
+    }
+
+    .legend-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .legend-stages { display: flex; flex-direction: column; gap: 10px; }
+
+    .legend-stage {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .legend-stage:hover { background: rgba(255,255,255,0.05); }
+
+    .legend-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      flex-shrink: 0;
+    }
+    .legend-num.done {
+      background: rgba(104,211,145,0.2);
+      border-color: rgba(104,211,145,0.4);
+      color: #68d391;
+    }
+
+    .legend-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.3;
+    }
+    .legend-by {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 1px;
+    }
+
+    /* Per-complaint tracker */
+    .lifecycle-complaints {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .lc-complaint-row {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .lc-complaint-row:last-child { border-bottom: none; }
+
+    .lc-id {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    /* Stage dots row */
+    .lc-stages {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    .lc-connector {
+      position: absolute;
+      left: 12px; right: 12px;
+      top: 50%; transform: translateY(-50%);
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .lc-connector-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38a169, #68d391);
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+
+    .lc-dot {
+      position: relative;
+      z-index: 1;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      cursor: default;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .lc-dot:hover { transform: scale(1.15); }
+
+    .lc-dot.done {
+      background: linear-gradient(135deg, #276749, #38a169);
+      border: 2px solid #68d391;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(104,211,145,0.4);
+    }
+    .lc-dot.active {
+      background: rgba(99,179,237,0.2);
+      border: 2px solid #63b3ed;
+      color: #63b3ed;
+      box-shadow: 0 0 8px rgba(99,179,237,0.3);
+      animation: pulse-dot 1.8s infinite;
+    }
+    .lc-dot.pending {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.25);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 6px rgba(99,179,237,0.3); }
+      50%       { box-shadow: 0 0 14px rgba(99,179,237,0.6); }
+    }
+
+    .lc-meta {
+      display: flex;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .lifecycle-wrap { grid-template-columns: 1fr; }
+      .lifecycle-legend { position: static; }
+      .lc-dot { width: 22px; height: 22px; font-size: 9px; }
+    }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .container { padding: 16px; }
+    }
+
+    /* ── View Detail Modal ── */
+    .modal-bg {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .modal-bg.open { display: flex; }
+
+    .modal {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 24px;
+      width: 460px; max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: fadeUp 0.25s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 16px;
+    }
+    .modal-title {
+      font-size: 15px; font-weight: 700;
+      color: #63b3ed; letter-spacing: 0.02em;
+    }
+    .modal-close {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; width: 30px; height: 30px;
+      color: rgba(255,255,255,0.5); font-size: 14px;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: rgba(252,129,129,0.15); color: #fc8181; border-color: rgba(252,129,129,0.3); }
+
+    /* Image area */
+    .modal-img-wrap {
+      position: relative;
+      width: 100%; height: 200px;
+      border-radius: 12px; overflow: hidden;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 14px;
+    }
+    .modal-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .modal-img-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 10px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-img-badge {
+      font-size: 11px; font-weight: 600;
+      background: rgba(167,139,250,0.25);
+      border: 1px solid rgba(167,139,250,0.35);
+      color: #c4b5fd; padding: 3px 10px; border-radius: 20px;
+    }
+    .modal-img-severity {
+      font-size: 11px; font-weight: 700;
+      background: rgba(252,129,129,0.2);
+      border: 1px solid rgba(252,129,129,0.3);
+      color: #fc8181; padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .modal-no-img {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+
+    /* Info rows */
+    .modal-rows { margin-top: 6px; }
+    .modal-row {
+      display: flex; justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .modal-key { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .modal-val { font-size: 12px; color: #fff; font-weight: 500; }
+
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">SMC <span>Portal</span></div>
+    <div class="nav-right">
+      <div class="officer-badge">🏛️ SMC Officer</div>
+      <a href="{% url 'logout' %}" class="btn-logout" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+        ← Logout
+      </a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">TOTAL COMPLAINTS</div>
+        <div class="stat-value c-blue">{{ total_count }}</div>
+        <div class="stat-sub" style="color:rgba(255,255,255,0.35)">This month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">PENDING</div>
+        <div class="stat-value c-yellow">{{ pending_count }}</div>
+        <div class="stat-sub c-yellow">Awaiting action</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">IN PROGRESS</div>
+        <div class="stat-value c-blue">{{ inprogress_count }}</div>
+        <div class="stat-sub c-blue">Being repaired</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">COMPLETED</div>
+        <div class="stat-value c-green">{{ resolved_count }}</div>
+        <div class="stat-sub c-green">Resolved</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <label>WARD</label>
+      <select id="filter-ward" onchange="applyFilter()">
+        <option value="">All Wards</option>
+        <option value="Ward 1">Ward 1</option>
+        <option value="Ward 2">Ward 2</option>
+        <option value="Ward 3">Ward 3</option>
+        <option value="Ward 4">Ward 4</option>
+        <option value="Ward 5">Ward 5</option>
+        <option value="Ward 6">Ward 6</option>
+      </select>
+
+      <label>STATUS</label>
+      <select id="filter-status" onchange="applyFilter()">
+        <option value="">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="resolved">Resolved</option>
+      </select>
+
+      <label>LOCATION</label>
+      <input type="text" id="filter-location" placeholder="Search location..." oninput="applyFilter()" />
+
+      <button class="btn-reset" onclick="resetFilter()">✕ Reset</button>
+    </div>
+
+    <div class="section-title">
+      All Complaints
+      <span id="complaint-count">({{ complaints|length }} records)</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Location</th>
+            <th>Ward</th>
+            <th>Issue</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Reported</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="complaint-tbody">
+
+          {% for c in complaints %}
+            <tr class="complaint-row"
+                data-ward="Ward {{ c.id }}"
+                data-status="{{ c.status }}"
+                data-location="{{ c.location|lower }}">
+
+              {# ID #}
+              <td style="font-weight:600;color:#63b3ed;">
+                CD{{ c.id|stringformat:"03d" }}_{{ c.id }}
+              </td>
+
+              {# Location #}
+              <td>{{ c.location }}</td>
+
+              {# Ward #}
+              <td>Ward {{ c.id }}</td>
+
+              {# Issue type — inline if, no with/else #}
+              <td>
+                {% if c.ai_result and c.ai_result.detected_objects %}
+                  {{ c.ai_result.detected_objects.0|title }}
+                {% else %}
+                  Road Damage
+                {% endif %}
+              </td>
+
+              {# Priority / Severity — inline if, no with/else #}
+              <td>
+                {% if c.ai_result and c.ai_result.severity %}
+                  {% if c.ai_result.severity|lower == 'high' %}
+                    <span class="priority-high">High</span>
+                  {% elif c.ai_result.severity|lower == 'low' %}
+                    <span class="priority-low">Low</span>
+                  {% else %}
+                    <span class="priority-medium">Medium</span>
+                  {% endif %}
+                {% else %}
+                  <span class="priority-medium">Medium</span>
+                {% endif %}
+              </td>
+
+              {# Status badge #}
+              <td>
+                {% if c.status == 'pending' %}
+                  <span class="badge badge-pending">Pending</span>
+                {% elif c.status == 'in_progress' %}
+                  <span class="badge badge-progress">In Progress</span>
+                {% elif c.status == 'resolved' %}
+                  <span class="badge badge-done">Resolved</span>
+                {% else %}
+                  <span class="badge badge-overdue">{{ c.get_status_display }}</span>
+                {% endif %}
+              </td>
+
+              {# Reported date #}
+              <td style="color:rgba(255,255,255,0.45);">
+                {{ c.created_at|date:"d M Y" }}
+              </td>
+
+              {# Actions #}
+              <td>
+                <div class="action-btns">
+                  <button class="btn-view" onclick="openModal('{{ c.id }}')">👁 View</button>
+                  <form method="POST"
+                        action="{% url 'officer_update' c.id %}"
+                        class="inline-form"
+                        onclick="event.stopPropagation()">
+                    {% csrf_token %}
+                    <select name="status" class="inline-select">
+                      <option value="pending"     {% if c.status == 'pending'     %}selected{% endif %}>Pending</option>
+                      <option value="in_progress" {% if c.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                      <option value="resolved"    {% if c.status == 'resolved'    %}selected{% endif %}>Resolved</option>
+                    </select>
+                    <input type="number"
+                           name="progress"
+                           min="0" max="100"
+                           value="{{ c.progress }}"
+                           class="inline-progress"
+                           placeholder="0-100">
+                    <button type="submit" class="btn-update">🔧 Update</button>
+                  </form>
+                </div>
+              </td>
+
+            </tr>
+          {% empty %}
+            <tr class="empty-row">
+              <td colspan="8">No complaints found.</td>
+            </tr>
+          {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+
+  </div><div class="modal-bg" id="modal-bg" onclick="closeModalOutside(event)">
+    <div class="modal" id="modal">
+
+      <div class="modal-header">
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px;letter-spacing:0.06em;">COMPLAINT DETAILS</div>
+          <div class="modal-title" id="modal-complaint-id">—</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-img-wrap" id="modal-img-wrap">
+        <img id="modal-img" src="" alt="Complaint Image">
+        <div class="modal-img-overlay">
+          <span class="modal-img-badge" id="modal-ai-badge">🤖 AI Classified</span>
+          <span class="modal-img-severity" id="modal-severity-badge">—</span>
+        </div>
+        <div class="modal-no-img" id="modal-no-img" style="display:none;">
+          <div style="font-size:40px;">🕳️</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:8px;">No image uploaded</div>
+        </div>
+      </div>
+
+      <div style="padding:0 0 12px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px;">
+          <span>AI Confidence</span>
+          <span id="modal-confidence-val">—</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+          <div id="modal-confidence-bar" style="height:100%;border-radius:3px;background:linear-gradient(90deg,#a78bfa,#63b3ed);width:0%;transition:width 0.6s ease;"></div>
+        </div>
+      </div>
+
+      <div class="modal-rows">
+        <div class="modal-row"><span class="modal-key">📍 Location</span>    <span class="modal-val" id="m-location">—</span></div>
+        <div class="modal-row"><span class="modal-key">🏘️ Ward</span>        <span class="modal-val" id="m-ward">—</span></div>
+        <div class="modal-row"><span class="modal-key">🤖 AI Result</span>   <span class="modal-val" id="m-issue">—</span></div>
+        <div class="modal-row"><span class="modal-key">⚠️ Severity</span>    <span class="modal-val" id="m-severity">—</span></div>
+        <div class="modal-row"><span class="modal-key">📊 Status</span>      <span class="modal-val" id="m-status">—</span></div>
+        <div class="modal-row"><span class="modal-key">📈 Progress</span>    <span class="modal-val" id="m-progress">—</span></div>
+        <div class="modal-row"><span class="modal-key">📅 Reported</span>    <span class="modal-val" id="m-date">—</span></div>
+        <div class="modal-row" id="m-desc-row" style="border:none;">
+          <span class="modal-key">💬 Description</span>
+          <span class="modal-val" id="m-desc" style="font-style:italic;color:rgba(255,255,255,0.5);max-width:260px;text-align:right;">—</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Complaint data map — populated by Django, read by JS modal ──
+    const COMPLAINT_DATA = {
+      {% for c in complaints %}
+      "{{ c.id }}": {
+        id:          "CD{{ c.id|stringformat:'03d' }}_{{ c.id }}",
+        location:    "{{ c.location|escapejs }}",
+        ward:        "Ward {{ c.id }}",
+        issue:       "{% if c.ai_result and c.ai_result.detected_objects %}{{ c.ai_result.detected_objects.0|title|escapejs }}{% else %}Road Damage{% endif %}",
+        severity:    "{% if c.ai_result and c.ai_result.severity %}{{ c.ai_result.severity|title|escapejs }}{% else %}—{% endif %}",
+        confidence:  {% if c.ai_result and c.ai_result.confidence %}{{ c.ai_result.confidence }}{% else %}0{% endif %},
+        status:      "{{ c.get_status_display|escapejs }}",
+        progress:    {{ c.progress|default:0 }},
+        date:        "{{ c.created_at|date:'d M Y' }}",
+        description: "{{ c.description|default:''|escapejs }}",
+        image:       "{% if c.image %}{{ c.image.url }}{% endif %}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    };
+
+    // ── Open modal for a specific complaint ──
+    function openModal(id) {
+      const d = COMPLAINT_DATA[id];
+      if (!d) return;
+
+      document.getElementById('modal-complaint-id').textContent = d.id;
+
+      // Image — only shown here
+      const img     = document.getElementById('modal-img');
+      const noImg   = document.getElementById('modal-no-img');
+      const imgWrap = document.getElementById('modal-img-wrap');
+      if (d.image) {
+        img.src          = d.image;
+        img.style.display = 'block';
+        noImg.style.display = 'none';
+      } else {
+        img.style.display   = 'none';
+        noImg.style.display = 'flex';
+      }
+
+      // AI badge + severity overlay
+      document.getElementById('modal-severity-badge').textContent = d.severity;
+
+      // Confidence bar
+      const conf = parseFloat(d.confidence) || 0;
+      document.getElementById('modal-confidence-val').textContent = conf + '%';
+      setTimeout(() => {
+        document.getElementById('modal-confidence-bar').style.width = conf + '%';
+      }, 80);
+
+      // Info fields
+      document.getElementById('m-location').textContent = d.location;
+      document.getElementById('m-ward').textContent     = d.ward;
+      document.getElementById('m-issue').textContent    = d.issue;
+      document.getElementById('m-severity').textContent = d.severity;
+      document.getElementById('m-progress').textContent = d.progress + '%';
+      document.getElementById('m-date').textContent     = d.date;
+      document.getElementById('m-desc').textContent     = d.description || 'No description provided.';
+
+      // Status badge
+      const statusMap = {
+        'Pending':     '<span class="badge badge-pending">Pending</span>',
+        'In Progress': '<span class="badge badge-progress">In Progress</span>',
+        'Resolved':    '<span class="badge badge-done">Resolved</span>',
+      };
+      document.getElementById('m-status').innerHTML = statusMap[d.status] || `<span class="badge badge-overdue">${d.status}</span>`;
+
+      // Show modal
+      document.getElementById('modal-bg').classList.add('open');
+      document.getElementById('modal-confidence-bar').style.width = '0%';
+      setTimeout(() => {
+        document.getElementById('modal-confidence-bar').style.width = conf + '%';
+      }, 100);
+    }
+
+    function closeModal() {
+      document.getElementById('modal-bg').classList.remove('open');
+      document.getElementById('modal-img').src = '';
+      document.getElementById('modal-confidence-bar').style.width = '0%';
+    }
+
+    function closeModalOutside(e) {
+      if (e.target === document.getElementById('modal-bg')) closeModal();
+    }
+
+    // ── Client-side filter ──
+    function applyFilter() {
+      const ward     = document.getElementById('filter-ward').value.toLowerCase();
+      const status   = document.getElementById('filter-status').value.toLowerCase();
+      const location = document.getElementById('filter-location').value.toLowerCase();
+      let visible = 0;
+      document.querySelectorAll('.complaint-row').forEach(row => {
+        const match =
+          (!ward     || (row.dataset.ward     || '').toLowerCase().includes(ward))   &&
+          (!status   || (row.dataset.status   || '').toLowerCase() === status)       &&
+          (!location || (row.dataset.location || '').toLowerCase().includes(location));
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      document.getElementById('complaint-count').textContent = `(${visible} records)`;
+    }
+
+    function resetFilter() {
+      document.getElementById('filter-ward').value     = '';
+      document.getElementById('filter-status').value   = '';
+      document.getElementById('filter-location').value = '';
+      document.querySelectorAll('.complaint-row').forEach(r => r.style.display = '');
+      document.getElementById('complaint-count').textContent = `({{ complaints|length }} records)`;
+    }
+  </script>
+
+</body>
+</html>

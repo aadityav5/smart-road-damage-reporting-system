@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 280px;
+      overflow: hidden;
+    }
+
+    .video-bg { position: fixed; inset: 0; z-index: 0; }
+    .video-bg video { width: 100%; height: 100%; object-fit: cover; }
+
+    .overlay {
+      position: fixed; inset: 0; z-index: 1;
+      background: rgba(5, 10, 30, 0.65);
+      transition: background 0.5s;
+    }
+    .overlay.officer { background: rgba(10, 30, 15, 0.70); }
+
+    /* Card */
+    .card {
+      position: relative;
+      z-index: 2;
+      width: 300px;
+      backdrop-filter: blur(20px);
+      border-radius: 18px;
+      padding: 2rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeUp 0.6s cubic-bezier(.22,1,.36,1) both;
+      transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+      background: rgba(99, 179, 237, 0.08);
+      border: 1px solid rgba(99,179,237,0.25);
+      box-shadow: 0 8px 32px rgba(49,130,206,0.25);
+    }
+    .card.officer {
+      background: rgba(72, 187, 120, 0.08);
+      border: 1px solid rgba(72,187,120,0.25);
+      box-shadow: 0 8px 32px rgba(47,133,90,0.25);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Role Tabs */
+    .role-tabs {
+      display: flex;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .tab {
+      flex: 1;
+      padding: 9px 0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.04);
+      transition: all 0.25s;
+      border: none;
+      font-family: 'Sora', sans-serif;
+    }
+    .tab.active-citizen  { background: rgba(99,179,237,0.25);  color: #63b3ed; }
+    .tab.active-officer  { background: rgba(72,187,120,0.25);  color: #68d391; }
+
+    .role-icon { text-align: center; font-size: 28px; }
+
+    .card-title {
+      font-size: 20px; font-weight: 600;
+      color: #fff; text-align: center;
+    }
+    .card-subtitle {
+      font-size: 11px; text-align: center;
+      margin-top: -8px;
+      transition: color 0.3s;
+    }
+    .card:not(.officer) .card-subtitle { color: #63b3ed; }
+    .card.officer        .card-subtitle { color: #68d391; }
+
+    .field-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 5px;
+      letter-spacing: 0.05em;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    input::placeholder { color: rgba(255,255,255,0.3); }
+    .card:not(.officer) input:focus { border-color: #63b3ed; background: rgba(99,179,237,0.1); }
+    .card.officer        input:focus { border-color: #68d391; background: rgba(72,187,120,0.1); }
+
+    .error-msg {
+      display: none;
+      font-size: 12px; color: #fc8181;
+      background: rgba(252,129,129,0.1);
+      border: 1px solid rgba(252,129,129,0.25);
+      border-radius: 8px; padding: 8px 12px; text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+    .success-msg {
+      display: none;
+      font-size: 12px; color: #68d391;
+      background: rgba(72,187,120,0.1);
+      border: 1px solid rgba(72,187,120,0.25);
+      border-radius: 8px; padding: 8px 12px; text-align: center;
+    }
+    .success-msg.show { display: block; }
+
+    .btn {
+      width: 100%; padding: 12px; border: none;
+      border-radius: 10px; color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.03em;
+      transition: all 0.2s; margin-top: 4px;
+    }
+    .btn.citizen {
+      background: linear-gradient(135deg, #3182ce, #2b6cb0);
+      box-shadow: 0 4px 18px rgba(49,130,206,0.4);
+    }
+    .btn.citizen:hover { background: linear-gradient(135deg, #2b6cb0, #2c5282); transform: translateY(-1px); }
+    .btn.officer {
+      background: linear-gradient(135deg, #38a169, #276749);
+      box-shadow: 0 4px 18px rgba(56,161,105,0.4);
+    }
+    .btn.officer:hover { background: linear-gradient(135deg, #276749, #1c4532); transform: translateY(-1px); }
+
+    .signup-link {
+      text-align: center; font-size: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+    .card:not(.officer) .signup-link a { color: #63b3ed; text-decoration: none; }
+    .card.officer        .signup-link a { color: #68d391; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Background Video -->
+  <div class="video-bg">
+    <video autoplay muted loop playsinline src="road_video.mp4"></video>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Card -->
+  <div class="card" id="card">
+
+    <!-- Role Tabs -->
+    <div class="role-tabs">
+      <button class="tab active-citizen" id="tab-citizen" onclick="switchRole('citizen')">👤 Citizen</button>
+      <button class="tab" id="tab-officer" onclick="switchRole('officer')">🏛️ SMC Officer</button>
+    </div>
+
+    <div class="role-icon" id="role-icon">👤</div>
+    <p class="card-title" id="card-title">Citizen Sign In</p>
+    <p class="card-subtitle" id="card-subtitle">Public User Account</p>
+
+    <!-- Email -->
+    <div>
+      <p class="field-label">EMAIL</p>
+      <input type="email" id="email" placeholder="Enter email" />
+    </div>
+
+    <!-- Password -->
+    <div>
+      <p class="field-label">PASSWORD</p>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+
+    <!-- Messages -->
+    <div class="error-msg"   id="error-msg">❌ Invalid email or password!</div>
+    <div class="success-msg" id="success-msg">✅ Login successful! Redirecting...</div>
+
+    <button class="btn citizen" id="submit-btn" onclick="doLogin()">Sign In as Citizen</button>
+
+    <p class="signup-link">Don't have an account? <a href="signup.html">Sign Up</a></p>
+  </div>
+
+  <script>
+    let currentRole = 'citizen';
+
+    function switchRole(role) {
+      currentRole = role;
+      const card      = document.getElementById('card');
+      const overlay   = document.getElementById('overlay');
+      const tabC      = document.getElementById('tab-citizen');
+      const tabO      = document.getElementById('tab-officer');
+      const icon      = document.getElementById('role-icon');
+      const title     = document.getElementById('card-title');
+      const subtitle  = document.getElementById('card-subtitle');
+      const btn       = document.getElementById('submit-btn');
+      const emailInput = document.getElementById('email');
+
+      // hide messages on switch
+      document.getElementById('error-msg').classList.remove('show');
+      document.getElementById('success-msg').classList.remove('show');
+
+      if (role === 'citizen') {
+        card.classList.remove('officer');
+        overlay.classList.remove('officer');
+        tabC.className = 'tab active-citizen';
+        tabO.className = 'tab';
+        icon.textContent    = '👤';
+        title.textContent   = 'Citizen Sign In';
+        subtitle.textContent = 'Public User Account';
+        btn.textContent     = 'Sign In as Citizen';
+        btn.className       = 'btn citizen';
+        emailInput.placeholder = 'citizen@gmail.com';
+      } else {
+        card.classList.add('officer');
+        overlay.classList.add('officer');
+        tabC.className = 'tab';
+        tabO.className = 'tab active-officer';
+        icon.textContent    = '🏛️';
+        title.textContent   = 'SMC Officer Sign In';
+        subtitle.textContent = 'Official Staff Account';
+        btn.textContent     = 'Sign In as Officer';
+        btn.className       = 'btn officer';
+        emailInput.placeholder = 'officer@smc.gov.in';
+      }
+    }
+
+    function doLogin() {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorMsg   = document.getElementById('error-msg');
+      const successMsg = document.getElementById('success-msg');
+
+      errorMsg.classList.remove('show');
+      successMsg.classList.remove('show');
+      
+if (currentRole === 'citizen') {
+  if (email === 'citizen@gmail.com' && password === 'pass123') {
+    successMsg.classList.add('show');
+    setTimeout(() => {
+      window.location.href = "{% url 'menu' %}";  // /menu/
+    }, 1200);
+  } else {
+    errorMsg.classList.add('show');
+  }
+} else {
+  // SMC Officer credentials
+  if (email === 'officer@smc.gov.in' && password === 'officer123') {
+    successMsg.classList.add('show');
+    setTimeout(() => {
+      window.location.href = "{% url 'gov' %}";   // /gov-dashboard/
+    }, 1200);
+  } else {
+    errorMsg.classList.add('show');
+  }
+}
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+
+</body>
+</html>

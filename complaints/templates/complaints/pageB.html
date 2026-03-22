@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Complaint Detail — Complaint Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Deep Black & Neutral Grey Palette */
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: #262626;
+      --text: #f5f5f5;
+      --text2: #a3a3a3;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --blue: #ffffff; 
+      --red: #ef4444;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      height: 52px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      background: rgba(10, 10, 10, 0.98); 
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-brand { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); }
+    .topbar-brand span { color: var(--text2); } 
+    .topbar-back {
+      font-size: 12px; color: var(--text2);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .topbar-back:hover { color: var(--text); }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow-y: auto; padding: 28px 32px;
+      gap: 18px;
+    }
+
+    .id-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+      flex-shrink: 0;
+    }
+    .id-label {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text2); margin-bottom: 6px;
+    }
+    .id-value { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700; color: var(--text); }
+    .id-meta  { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .id-pct   {
+      display: inline-block; margin-top: 10px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(255, 255, 255, 0.05); 
+      border: 1px solid rgba(255, 255, 255, 0.1); 
+      color: var(--text); 
+      padding: 3px 12px; border-radius: 20px;
+    }
+
+    .section-label {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text2); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .section-label::after { content:''; flex:1; height:1px; background: var(--border); }
+
+    .desc-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      font-size: 13px; color: var(--text2); line-height: 1.7;
+      flex-shrink: 0;
+    }
+    .desc-empty { font-style: italic; color: var(--text2); opacity: 0.6; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 24px; flex: 1; }
+    .timeline::before {
+      content: ''; position: absolute;
+      left: 7px; top: 6px; bottom: 6px;
+      width: 2px; background: var(--border); border-radius: 2px;
+    }
+    .tl-item {
+      position: relative; margin-bottom: 20px;
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .tl-item.visible { opacity: 1; transform: translateY(0); }
+    .tl-item:last-child { margin-bottom: 0; }
+
+    .tl-dot {
+      position: absolute; left: -20px; top: 4px;
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      background: var(--surface); transition: all 0.3s;
+    }
+    .tl-dot.done   { background: var(--green); border-color: var(--green); }
+    .tl-dot.active { background: var(--surface); border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+
+    .tl-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
+    .tl-title.muted { color: var(--text2); font-weight: 400; }
+    .tl-role  { font-size: 10px; color: var(--text2); margin-bottom: 2px; font-style: italic; }
+    .tl-desc  { font-size: 11px; color: var(--text2); line-height: 1.6; }
+    .tl-badge {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px; margin-top: 4px;
+    }
+    .badge-done    { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+    .badge-active  { background: rgba(245,158,11,0.12); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+    .badge-pending { display: none; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      overflow: hidden; padding: 20px 18px;
+      gap: 14px;
+    }
+
+    .right-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px; font-weight: 700; color: var(--text); flex-shrink: 0;
+    }
+    .right-title span { color: var(--text2); }
+
+    /* Progress */
+    .progress-block { flex-shrink: 0; }
+    .prog-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .prog-label { font-size: 11px; color: var(--text2); }
+    .prog-pct   { font-size: 11px; font-weight: 700; color: var(--text); }
+    .prog-track {
+      height: 5px; background: var(--border);
+      border-radius: 99px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; border-radius: 99px;
+      transition: width 1.2s ease; width: 0%;
+    }
+    .prog-fill.low    { background: var(--red); }
+    .prog-fill.medium { background: var(--yellow); }
+    .prog-fill.high   { background: var(--blue); } 
+    .prog-fill.done   { background: var(--green); }
+
+    /* Stats */
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; flex-shrink: 0;
+    }
+    .stat-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+    }
+    .stat-key   { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); margin-bottom: 4px; }
+    .stat-val   { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); }
+    .stat-val.green  { color: var(--green); }
+    .stat-val.yellow { color: var(--yellow); }
+    .stat-val.blue   { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-brand">Complaint <span>Portal</span></div>
+    <a href="{% url 'menu' %}" class="topbar-back">← Back</a>
+  </div>
+
+  <div class="main">
+
+    <div class="left-panel">
+
+      <div class="id-block">
+        <div class="id-label">Complaint ID</div>
+        <div class="id-value" id="complaintId">CD{{ complaint.id|stringformat:"03d" }}_{{ complaint.id }}</div>
+        <div class="id-meta"  id="complaintMeta">—</div>
+        <div class="id-pct"   id="complaintPct">0% complete</div>
+      </div>
+
+      <div>
+        <div class="section-label">Description</div>
+        <div class="desc-box" id="descText">
+          <span class="desc-empty">No description provided.</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Complaint Timeline</div>
+        <div class="timeline">
+
+          <div class="tl-item">
+            <div class="tl-dot done"></div>
+            <div class="tl-title">Complaint Registered</div>
+            <div class="tl-role">Citizen</div>
+            <div class="tl-desc">Complaint submitted to SMC through the portal.</div>
+            <span class="tl-badge badge-done">Done</span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot1"></div>
+            <div class="tl-title" id="t1">Complaint Verified</div>
+            <div class="tl-role">Junior Engineer — Site Visit</div>
+            <div class="tl-desc">Junior Engineer visits site to verify the reported issue.</div>
+            <span class="tl-badge" id="b1"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot2"></div>
+            <div class="tl-title" id="t2">Approved by Executive Engineer</div>
+            <div class="tl-role">Executive Engineer</div>
+            <div class="tl-desc">Reviews verification report and grants approval for repair.</div>
+            <span class="tl-badge" id="b2"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot3"></div>
+            <div class="tl-title" id="t3">Work Order Issued</div>
+            <div class="tl-role">SMC Administration</div>
+            <div class="tl-desc">Work order raised. Contractor selected through tender.</div>
+            <span class="tl-badge" id="b3"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot4"></div>
+            <div class="tl-title" id="t4">Contractor Assigned</div>
+            <div class="tl-role">SMC — Works Department</div>
+            <div class="tl-desc">Licensed contractor assigned and scheduled for repair.</div>
+            <span class="tl-badge" id="b4"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot5"></div>
+            <div class="tl-title" id="t5">Work Started</div>
+            <div class="tl-role">Contractor</div>
+            <div class="tl-desc">Repair work has commenced on site.</div>
+            <span class="tl-badge" id="b5"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot6"></div>
+            <div class="tl-title" id="t6">Work In Progress</div>
+            <div class="tl-role">Contractor — Site Supervisor</div>
+            <div class="tl-desc">Repair work actively ongoing under supervision.</div>
+            <span class="tl-badge" id="b6"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot7"></div>
+            <div class="tl-title" id="t7">Quality Check</div>
+            <div class="tl-role">Junior Engineer — Inspection</div>
+            <div class="tl-desc">Completed work inspected for SMC quality standards.</div>
+            <span class="tl-badge" id="b7"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot8"></div>
+            <div class="tl-title" id="t8">Final Approval</div>
+            <div class="tl-role">Municipal Commissioner</div>
+            <div class="tl-desc">Final sign-off after quality inspection report review.</div>
+            <span class="tl-badge" id="b8"></span>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-dot" id="dot9"></div>
+            <div class="tl-title" id="t9">Resolved &amp; Closed</div>
+            <div class="tl-role">SMC — Complaint Cell</div>
+            <div class="tl-desc">Complaint officially closed. Issue resolved.</div>
+            <span class="tl-badge" id="b9"></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="right-title">Complaint <span>Details</span></div>
+
+      {% if complaint.image %}
+        <img src="{{ complaint.image.url }}" style="max-width: 450px;">
+      {% else %}
+        <p>No image found for this complaint.</p>
+      {% endif %}
+
+      <div class="progress-block">
+        <div class="section-label">Progress</div>
+        <div class="prog-top">
+          <span class="prog-label">Completion</span>
+          <span class="prog-pct" id="progPct">0%</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="progFill"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Status Info</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-key">Status</div>
+            <div class="stat-val yellow" id="statStatus">Pending</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-key">Step</div>
+            <div class="stat-val blue" id="statStep">1 / 10</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-key">Filed On</div>
+            <div class="stat-val" id="statDate" style="font-size:11px;">—</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-key">ID</div>
+            <div class="stat-val" id="statId" style="font-size:11px;">CD{{ complaint.id|stringformat:"03d" }}_{{ complaint.id }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Scroll animation
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.tl-item').forEach(function(el) { observer.observe(el); });
+
+    // Get class for progress
+    function getPctClass(p) {
+      if (p >= 100) return 'done';
+      if (p >= 75)  return 'high';
+      if (p >= 40)  return 'medium';
+      return 'low';
+    }
+    function getStatusLabel(p) {
+      if (p >= 100) return 'Resolved';
+      if (p >= 75)  return 'In Progress';
+      if (p >= 40)  return 'Under Review';
+      return 'Pending';
+    }
+
+    // Load from localStorage
+    window.addEventListener('DOMContentLoaded', function() {
+      var date = localStorage.getItem('complaintDate') || '—';
+      var desc = localStorage.getItem('complaintDescription') || '';
+      var pct  = 10; // default step 1 done
+
+      // ID block
+      document.getElementById('complaintMeta').textContent = 'Filed on ' + date;
+      document.getElementById('complaintPct').textContent  = pct + '% complete';
+
+      // Stats
+      document.getElementById('statDate').textContent   = date.split(' · ')[0] || date;
+      document.getElementById('statStatus').textContent = getStatusLabel(pct);
+      document.getElementById('statStep').textContent   = '1 / 10';
+
+      // Description
+      if (desc && desc.trim() !== '') {
+        document.getElementById('descText').innerHTML = desc;
+      }
+
+      // Progress bar
+      var fill = document.getElementById('progFill');
+      document.getElementById('progPct').textContent = pct + '%';
+      fill.className = 'prog-fill ' + getPctClass(pct);
+      setTimeout(function() { fill.style.width = pct + '%'; }, 300);
+
+      // Timeline — step 1 done only
+      var currentStep = 1;
+      for (var i = 1; i <= 9; i++) {
+        var dot   = document.getElementById('dot' + i);
+        var title = document.getElementById('t' + i);
+        var badge = document.getElementById('b' + i);
+        if (i < currentStep) {
+          dot.classList.add('done');
+          badge.textContent = 'Done'; badge.className = 'tl-badge badge-done';
+        } else if (i === currentStep) {
+          dot.classList.add('active');
+          badge.textContent = 'In Review'; badge.className = 'tl-badge badge-active';
+        } else {
+          title.classList.add('muted');
+          badge.className = 'tl-badge badge-pending';
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

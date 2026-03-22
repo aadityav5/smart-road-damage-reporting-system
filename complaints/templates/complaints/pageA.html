@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Complaints — Complaint Portal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f5f5;
+      --color-background-tertiary: #eeeeee;
+      --color-text-primary: #111111;
+      --color-text-secondary: #555555;
+      --color-text-tertiary: #999999;
+      --color-border-tertiary: #dddddd;
+      --color-border-secondary: #cccccc;
+      --border-radius-md: 6px;
+      --border-radius-lg: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1a1a1a;
+        --color-background-secondary: #111111;
+        --color-background-tertiary: #0d0d0d;
+        --color-text-primary: #e8e8e8;
+        --color-text-secondary: #aaaaaa;
+        --color-text-tertiary: #555555;
+        --color-border-tertiary: #2a2a2a;
+        --color-border-secondary: #3a3a3a;
+      }
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--color-background-tertiary);
+      min-height: 100vh;
+      color: var(--color-text-primary);
+    }
+
+    .topbar {
+      background: var(--color-background-secondary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar-brand { font-size: 15px; font-weight: 700; color: var(--color-text-primary); }
+    .topbar-brand span { font-weight: 400; color: var(--color-text-secondary); }
+    .topbar-back {
+      font-size: 13px; color: var(--color-text-secondary);
+      text-decoration: none; cursor: pointer; transition: color 0.2s;
+    }
+    .topbar-back:hover { color: var(--color-text-primary); }
+
+    .content {
+      padding: 24px;
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .page-heading { padding: 20px 0 4px; }
+    .page-heading h1 { font-size: 24px; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.4px; }
+    .page-heading p { font-size: 13px; color: var(--color-text-tertiary); margin-top: 4px; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--color-text-secondary);
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding-bottom: 10px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+
+    .complaint-list { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Row */
+    .complaint-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Updated to act as an anchor tag */
+    .complaint-box {
+      flex: 1;
+      background: var(--color-background-primary);
+      border: 1.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      font-family: 'Inter', sans-serif;
+      text-align: left;
+      text-decoration: none; /* remove link underline */
+      color: inherit; /* inherit text colors */
+    }
+    .complaint-box:hover {
+      background: var(--color-background-secondary);
+      border-color: var(--color-text-secondary);
+    }
+
+    .cb-id { font-size: 15px; font-weight: 700; color: var(--color-text-primary); letter-spacing: 0.3px; }
+    .cb-date { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+    .cb-arrow { font-size: 14px; color: var(--color-text-tertiary); flex-shrink: 0; }
+
+    /* Progress side */
+    .complaint-progress {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      min-width: 72px;
+      flex-shrink: 0;
+    }
+    .complaint-pct {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .mini-track {
+      width: 72px;
+      height: 5px;
+      background: var(--color-border-tertiary);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .mini-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 1s ease;
+      width: 0%;
+    }
+    
+    /* color based on pct dynamically applied via JS */
+    .mini-fill.low    { background: #ef4444; }
+    .mini-fill.medium { background: #f59e0b; }
+    .mini-fill.high   { background: #3b82f6; }
+    .mini-fill.done   { background: #10b981; }
+
+    .mini-status {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .mini-status.done   { color: #10b981; }
+    .mini-status.high   { color: #3b82f6; }
+    .mini-status.medium { color: #f59e0b; }
+    .mini-status.low    { color: #ef4444; }
+
+    /* Empty */
+    .empty-state {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+      /* default display controlled by Django */
+    }
+    .empty-state svg { width: 36px; height: 36px; stroke: var(--color-text-tertiary); fill: none; stroke-width: 1.5; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; color: var(--color-text-tertiary); }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-brand">Complaint <span>Portal</span></div>
+    <a href="{% url 'menu' %}" class="topbar-back">← Back to Dashboard</a>
+  </div>
+
+  <div class="content">
+
+    <div class="page-heading">
+      <h1>My Complaints</h1>
+      <p>All complaints registered by you with SMC</p>
+    </div>
+
+    <div class="section-label">Registered Complaints</div>
+
+    <div class="complaint-list">
+      
+      {% if complaints %}
+        {% for c in complaints %}
+          <div class="complaint-row">
+            
+            <a href="{% url 'track_detail' c.id %}" class="complaint-box">
+              <div style="overflow: hidden;">
+                <div class="cb-id">{{ c.id }}</div>
+                <div class="cb-date">{{ c.location }}</div>
+              </div>
+              <div class="cb-arrow">›</div>
+            </a>
+            
+            <div class="complaint-progress">
+              <div class="complaint-pct">{{ c.progress }}%</div>
+              <div class="mini-track">
+                <div class="mini-fill" data-pct="{{ c.progress }}" style="width:0%"></div>
+              </div>
+              <div class="mini-status" data-pct="{{ c.progress }}">{{ c.get_status_display }}</div>
+            </div>
+            
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="display: block;">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <p>No complaints yet.</p>
+        </div>
+      {% endif %}
+      </div>
+
+  </div>
+
+  <script>
+    // Utility function to get the correct color class based on the percentage
+    function getPctClass(pct) {
+      if (pct >= 100) return 'done';
+      if (pct >= 75)  return 'high';
+      if (pct >= 40)  return 'medium';
+      return 'low';
+    }
+
+    // Process all progress elements on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Small delay for smooth entry animation
+      setTimeout(function() {
+        
+        // Add color classes and animate width for the progress bars
+        document.querySelectorAll('.mini-fill').forEach(function(el) {
+          const pct = parseInt(el.getAttribute('data-pct')) || 0;
+          el.classList.add(getPctClass(pct));
+          el.style.width = pct + '%';
+        });
+
+        // Add matching color classes to the status text
+        document.querySelectorAll('.mini-status').forEach(function(el) {
+          const pct = parseInt(el.getAttribute('data-pct')) || 0;
+          el.classList.add(getPctClass(pct));
+        });
+
+      }, 200);
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Pothole Detection</title>
+</head>
+<body>
+    <h1>Test Pothole Detection (best.pt)</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Select image:</label>
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Analyze</button>
+    </form>
+
+    {% if result %}
+        <h2>Result: {{ result }}</h2>
+    {% endif %}
+</body>
+</html>
