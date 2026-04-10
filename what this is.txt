@@ -1,0 +1,8 @@
+You Have	Why it matters
+Django + MySQL backend	Shows backend development skills
+AI model integration	Shows ML/AI practical knowledge
+Role-based login system	Shows authentication understanding
+Database design	Shows data modeling skills
+Citizen + Officer workflow	Shows system thinking
+GitHub repo	Shows version control knowledge
+Full prototype	Shows you can build end-to-end systems
